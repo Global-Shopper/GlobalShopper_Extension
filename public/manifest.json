@@ -1,0 +1,43 @@
+{
+    "manifest_version": 3,
+    "name": "GSHOP Grabber",
+    "version": "0.1.0",
+    "description": "Grab product info (title, price, url, images) from Amazon/eBay and save to a popup list.",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "tabs",
+        "scripting"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {
+        "default_title": "Product Grabber",
+        "default_popup": "index.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.amazon.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        },
+        {
+            "matches": [
+                "http://localhost:5173/*",
+                "https://gshop.io.vn/*"
+            ],
+            "js": [
+                "content-gshop.js"
+            ]
+        }
+    ],
+    "icons": {
+        "16": "214643854.png",
+        "48": "214643854.png",
+        "128": "214643854.png"
+    }
+}
