@@ -19,7 +19,11 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.amazon.com/*"
+                "*://*.amazon.com/*",
+                "*://*.ebay.com/*",
+                "*://*.asos.com/*",
+                "*://*.global.gmarket.co.kr/*"
+
             ],
             "js": [
                 "content.js"

@@ -12,7 +12,9 @@ const ProductCard = ({ product, onRemove }) => {
 
       {/* Thông tin */}
       <div className="flex-1">
-        <h2 className="text-sm font-semibold line-clamp-2">{product.name}</h2>
+      <h2 className="text-sm font-semibold line-clamp-2 [overflow-wrap:anywhere]">
+        {product.name}
+      </h2>
         {product.price && (
           <p className="text-green-600 font-bold mt-1">{product.price}</p>
         )}
@@ -24,7 +26,7 @@ const ProductCard = ({ product, onRemove }) => {
           rel="noreferrer"
           className="text-blue-500 text-xs underline"
         >
-          Xem trên Amazon
+          Xem trên {product.platform}
         </a>
       </div>
 
