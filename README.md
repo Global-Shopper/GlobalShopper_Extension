@@ -1,0 +1,1 @@
+# GlobalShopper_Extension
