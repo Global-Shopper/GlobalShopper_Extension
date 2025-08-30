@@ -18,6 +18,9 @@ const ProductCard = ({ product, onRemove }) => {
         {product.price && (
           <p className="text-green-600 font-bold mt-1">{product.price}</p>
         )}
+        {product.variants && (
+          <p className="text-gray-600 mt-1">{product.variants.join(", ")}</p>
+        )}
 
         {/* Link Amazon */}
         <a

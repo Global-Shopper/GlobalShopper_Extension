@@ -68,12 +68,15 @@ function getAmazonProductInfo() {
     img.getAttribute("data-old-hires") || img.src
   );
 
+
+  const variants = getSelectedVariantsAmazon()
   const productInfo = {
     url,
     name,
     price,
     mainImage,
-    subImages
+    subImages,
+    variants
   };
 
   console.log("Thông tin sản phẩm:", productInfo);
@@ -173,6 +176,82 @@ const getGmarketProductInfo = () => {
 
   console.log("Thông tin sản phẩm Gmarket:", productInfo);
   return productInfo;
+}
+
+
+
+function getSelectedVariantsAmazon() {
+  const variants = [];
+  const seen = new Set();
+
+  // helper
+  const norm = s => (s || "").replace(/\s+/g, " ").trim();
+  const isPlaceholder = v => /^(select|chọn|selecione|seleccionar)$/i.test(norm(v));
+
+  // 1) INLINE-TWISTER (các hàng .inline-twister-row)
+  document.querySelectorAll('.inline-twister-row').forEach(row => {
+    // Ưu tiên label/value hiển thị trong header
+    let label = norm(row.querySelector('.dimension-text .a-color-secondary')?.textContent).replace(/:\s*$/, '');
+    let value = norm(row.querySelector('.inline-twister-dim-title-value')?.textContent);
+
+    // Fallback: đọc aria-label kiểu "Selected Color is Black. Tap to collapse."
+    if ((!label || !value)) {
+      const header = row.querySelector('[id^="inline-twister-expander-header-"]');
+      const aria = header?.getAttribute('aria-label') || '';
+      const m = aria.match(/Selected\s+(.+?)\s+is\s+(.+?)\./i);
+      if (m) {
+        if (!label) label = norm(m[1]);
+        if (!value) value = norm(m[2]);
+      }
+    }
+
+    if (label && value && !isPlaceholder(value)) {
+      const pair = `${label}: ${value}`;
+      if (!seen.has(pair)) { seen.add(pair); variants.push(pair); }
+    }
+  });
+
+  // 2) LEGACY TWISTER (mỗi biến thể nằm trong #variation_*)
+  document.querySelectorAll('[id^="variation_"]').forEach(sec => {
+    let label =
+      norm(sec.querySelector('label.a-form-label')?.textContent).replace(/:\s*$/, '') ||
+      // Suy ra từ id: variation_size_name -> Size, variation_color_name -> Color
+      norm(sec.id.replace(/^variation_/, '').replace(/_name$/, '').replace(/_/g, ' ')).replace(/\b\w/g, s => s.toUpperCase());
+
+    // Giá trị: ưu tiên .selection (swatches)
+    let value =
+      norm(sec.querySelector('.selection')?.textContent) ||
+      // Dropdown prompt hiển thị (ví dụ "X-Large")
+      norm(sec.querySelector('.a-dropdown-prompt')?.textContent) ||
+      // Option đang chọn trong <select>
+      (function () {
+        const opt = sec.querySelector('select option:checked');
+        if (!opt) return "";
+        return norm(opt.getAttribute('data-a-html-content') || opt.textContent);
+      })();
+
+    if (label && value && !isPlaceholder(value)) {
+      const pair = `${label}: ${value}`;
+      if (!seen.has(pair)) { seen.add(pair); variants.push(pair); }
+    }
+  });
+
+  // 3) Fallback chung: nếu chưa bắt được gì, thử quét mọi select có prompt/option
+  if (variants.length === 0) {
+    document.querySelectorAll('select[id^="native_dropdown_selected_"]').forEach(sel => {
+      const id = sel.id.replace(/^native_dropdown_selected_/, '').replace(/_name$/, '');
+      const label = id.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+      const prompt = norm(document.querySelector(`#dropdown_selected_${id}_name .a-dropdown-prompt`)?.textContent);
+      const opt = sel.querySelector('option:checked');
+      const value = norm(opt?.getAttribute('data-a-html-content') || opt?.textContent || prompt);
+      if (label && value && !isPlaceholder(value)) {
+        const pair = `${label}: ${value}`;
+        if (!seen.has(pair)) { seen.add(pair); variants.push(pair); }
+      }
+    });
+  }
+
+  return variants;
 }
 
 
