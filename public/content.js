@@ -101,14 +101,17 @@ const getEbayProductInfo = () => {
 
   const subImages = [...document.querySelectorAll("#vi_main_img_fs img, .ux-image-carousel-item img")]
     .map(img => img.src)
-    .filter((v, i, arr) => v && arr.indexOf(v) === i); // lọc trùng
+    .filter((v, i, arr) => v && arr.indexOf(v) === i);
+
+  const variants = getEbaySelectedVariants()
 
   const productInfo = {
     url,
     name,
     price,
     mainImage,
-    subImages
+    subImages,
+    variants
   };
 
   console.log("Thông tin sản phẩm eBay:", productInfo);
@@ -250,6 +253,41 @@ function getSelectedVariantsAmazon() {
       }
     });
   }
+
+  return variants;
+}
+
+function getEbaySelectedVariants(root = document) {
+  const containers = root.querySelectorAll('.x-msku-evo[data-testid="x-msku-evo"]');
+  const norm = s => (s || "").replace(/\s+/g, " ").trim();
+  const isPlaceholder = v => /^select$/i.test(norm(v));
+  const variants = [];
+
+  containers.forEach(container => {
+    container.querySelectorAll('.vim.x-sku .listbox-button').forEach(box => {
+      let label = norm(box.querySelector('.btn__label')?.textContent).replace(/:\s*$/, "");
+      let value = norm(box.querySelector('.btn__text')?.textContent);
+
+      // Fallback: nếu nút trống thì tìm option đang active trong listbox popup
+      if (!value || isPlaceholder(value)) {
+        const active = box.querySelector('.listbox__option--active[aria-selected="true"], .listbox__option--active');
+        if (active) {
+          value = norm(active.querySelector('.listbox__value')?.textContent || active.textContent);
+        }
+      }
+
+      // Fallback 2: từ select hidden
+      if (!value || isPlaceholder(value)) {
+        const native = box.querySelector('select.listbox__native');
+        const selOpt = native?.selectedOptions?.[0];
+        value = norm(selOpt?.textContent);
+      }
+
+      if (label && value && !isPlaceholder(value)) {
+        variants.push(`${label}: ${value}`);
+      }
+    });
+  });
 
   return variants;
 }
