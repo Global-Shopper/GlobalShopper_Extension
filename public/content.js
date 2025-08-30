@@ -172,12 +172,15 @@ const getGmarketProductInfo = () => {
     return src.startsWith("//") ? "https:" + src : src;
   });
 
+  const variants = getGmarketSelectedVariants();
+
   const productInfo = {
     url,
     name,
     price,
     mainImage,
-    subImages
+    subImages,
+    variants
   };
 
   console.log("Thông tin sản phẩm Gmarket:", productInfo);
@@ -332,5 +335,33 @@ function getAsosSelectedVariants(root = document) {
   if (size) variants.push(`Size: ${size}`);
 
   return variants;
+}
+
+function getGmarketSelectedVariants(root = document) {
+  const norm = s => (s || "").replace(/\s+/g, " ").trim();
+
+  const labels = [];
+  root.querySelectorAll('.box__select .box__select-item .button__select-item--selected .box__option-selected')
+    .forEach(el => {
+      const t = norm(el.textContent);
+      if (t) labels.push(t);
+    });
+
+  const choiceText = norm(root.querySelector('.box__choice-list .text__choice-block')?.textContent || "");
+  if (!choiceText) return [];
+  let parts = choiceText.split('+').map(s => norm(s));
+
+  parts[0] = parts[0].replace(/^선택\d+\.\s*/,'').trim();
+
+  parts = parts.map(p =>
+    p.replace(/\(\s*[+−-]?\s*[￦₩].*?\)/g, '').trim()
+  );
+
+  const n = Math.min(labels.length, parts.length);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    if (labels[i] && parts[i]) out.push(`${labels[i]}: ${parts[i]}`);
+  }
+  return out;
 }
 
