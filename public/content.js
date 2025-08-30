@@ -139,12 +139,15 @@ const getAsosProductInfo = () => {
     .map(img => img.src)
     .filter((v, i, arr) => v && arr.indexOf(v) === i);
 
+  const variants = getAsosSelectedVariants();
+
   const productInfo = {
     url,
     name,
     price,
     mainImage,
-    subImages
+    subImages,
+    variants
   };
 
   console.log("Thông tin sản phẩm ASOS:", productInfo);
@@ -292,4 +295,42 @@ function getEbaySelectedVariants(root = document) {
   return variants;
 }
 
+function getAsosSelectedVariants(root = document) {
+  const norm = s => (s || "").replace(/\s+/g, " ").trim();
+  const isPlaceholder = v => /^please select$/i.test(norm(v));
+
+  const variants = [];
+  let colour = "";
+  const colourBlock = root.querySelector('[data-testid="productColour"]');
+  if (colourBlock) {
+    colour =
+      norm(colourBlock.querySelector('.aKxaq, .hEVA6')?.textContent) ||
+      norm(
+        root
+          .querySelector('li[data-testid="facetThumbnail--selected"] [aria-label]')
+          ?.getAttribute('aria-label')
+      ) ||
+      norm(
+        root
+          .querySelector('li[data-testid="facetThumbnail--selected"] img')
+          ?.getAttribute('alt')
+      );
+  }
+  if (colour) variants.push(`Colour: ${colour}`);
+  let size = "";
+  const sizeSelect =
+    root.querySelector('[data-testid="variant-selector"] select') ||
+    root.querySelector('#variantSelector');
+
+  if (sizeSelect) {
+    const opt =
+      sizeSelect.selectedOptions?.[0] ||
+      sizeSelect.querySelector('option[selected]');
+    const text = norm(opt?.textContent);
+    if (opt && opt.value && !isPlaceholder(text)) size = text;
+  }
+  if (size) variants.push(`Size: ${size}`);
+
+  return variants;
+}
 
